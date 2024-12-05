@@ -14,26 +14,27 @@ const Auth = () => {
     e.preventDefault();
     const url = isLogin ? '/login' : '/register';
     const data = isLogin ? { username, password } : { username, email, password, name };
-
+  
     try {
       const response = await axiosInstance.post(url, data, {
-        withCredentials: true, // Ensure the cookie is sent
+        withCredentials: true,
       });
-
+  
+      console.log(response.data); // Log response for debugging
       alert(response.data.message);
-
+  
       if (isLogin) {
-        // Save token and redirect to the profile page after successful login
         localStorage.setItem('token', response.data.token);
         navigate('/profile');
       } else {
-        // Switch to login view after successful registration
         setIsLogin(true);
       }
     } catch (err) {
+      console.error(err); // Log the error for more details
       alert(err.response?.data?.error || 'Something went wrong');
     }
   };
+  
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-300 via-pink-300 to-red-300 overflow-hidden">
