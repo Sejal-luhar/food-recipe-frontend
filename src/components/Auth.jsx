@@ -22,8 +22,11 @@ const Auth = () => {
       const response = await axiosInstance.post(url, data);
       alert(response.data.message);
       if (isLogin) {
-        navigate('/profile'); // Redirect to profile after login
-      } else {
+        // Save token from response
+        localStorage.setItem('token', response.data.token); // Assuming the token is returned in response.data.token
+        navigate('/profile');
+      }
+      else {
         setIsLogin(true); // Switch to login after successful registration
       }
     } catch (err) {

@@ -4,62 +4,54 @@ import Navbar from './Navbar';
 
 const Profile = () => {
   const [user, setUser] = useState(null);
-  const [newRecipe, setNewRecipe] = useState({
-    title: '',
-    ingredients: '',
-    instructions: '',
-    image: null,
-  });
+  const [newRecipe, setNewRecipe] = useState({ title: '', ingredients: '', instructions: '', image: null });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isAddingRecipe, setIsAddingRecipe] = useState(true); // Directly show "Add Recipe" section
+  const [isAddingRecipe, setIsAddingRecipe] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch user profile information
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const { data } = await axiosInstance.get('/profile');
         setUser(data.user);
       } catch (err) {
-        setError('Error fetching profile. Please log in again.');
+        setError(err.response?.data?.message || 'Error fetching profile. Please log in again.');
+      } finally {
+        setLoading(false);
       }
     };
     fetchProfile();
   }, []);
 
-  // Handle recipe submission
   const handleAddRecipe = async (e) => {
     e.preventDefault();
     if (!newRecipe.title || !newRecipe.ingredients || !newRecipe.instructions) {
       alert('Please fill in all the fields.');
       return;
     }
-    setIsSubmitting(true);
+
     const formData = new FormData();
     formData.append('title', newRecipe.title);
     formData.append('ingredients', newRecipe.ingredients);
     formData.append('instructions', newRecipe.instructions);
     if (newRecipe.image) formData.append('image', newRecipe.image);
 
+    setIsSubmitting(true);
     try {
-      const { data } = await axiosInstance.post('/recipes', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      setUser((prevUser) => ({
-        ...prevUser,
-        recipes: [...(prevUser.recipes || []), data],
-      }));
+      const { data } = await axiosInstance.post('/recipes', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setUser((prev) => ({ ...prev, recipes: [...(prev.recipes || []), data] }));
       setNewRecipe({ title: '', ingredients: '', instructions: '', image: null });
-      setIsAddingRecipe(false); // Hide Add Recipe form after submission
-    } catch {
+      setIsAddingRecipe(false);
+    } catch (err) {
       setError('Error adding recipe. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  if (loading) return <div>Loading...</div>;
   if (error) return <div className="text-red-500">{error}</div>;
-  if (!user) return <div>Loading...</div>;
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -69,7 +61,7 @@ const Profile = () => {
         <div className="bg-white rounded-lg shadow-lg p-6">
           <div className="flex items-center space-x-4">
             <img
-              src="/public/10813372.png"
+              src={user.profileImage || '/path-to-default-placeholder.png'}
               alt={user.username}
               className="w-24 h-24 rounded-full"
             />
@@ -80,50 +72,21 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Add Recipe Form Section */}
-        <div className="mt-8 bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Add a New Recipe</h2>
-          <form onSubmit={handleAddRecipe}>
-            <div className="space-y-4">
-              <input
-                type="text"
-                placeholder="Recipe Title"
-                value={newRecipe.title}
-                onChange={(e) => setNewRecipe({ ...newRecipe, title: e.target.value })}
-                className="w-full p-4 border border-gray-300 rounded-md"
-              />
-              <textarea
-                placeholder="Ingredients"
-                value={newRecipe.ingredients}
-                onChange={(e) => setNewRecipe({ ...newRecipe, ingredients: e.target.value })}
-                className="w-full p-4 border border-gray-300 rounded-md"
-              />
-              <textarea
-                placeholder="Instructions"
-                value={newRecipe.instructions}
-                onChange={(e) => setNewRecipe({ ...newRecipe, instructions: e.target.value })}
-                className="w-full p-4 border border-gray-300 rounded-md"
-              />
-              <input
-                type="file"
-                onChange={(e) => setNewRecipe({ ...newRecipe, image: e.target.files[0] })}
-                className="w-full p-4 border border-gray-300 rounded-md"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="mt-4 w-full bg-purple-500 text-white py-2 rounded-md"
-            >
-              {isSubmitting ? 'Submitting...' : 'Submit Recipe'}
-            </button>
-          </form>
-        </div>
-
-        {/* Display Success or Error message */}
-        {!isAddingRecipe && (
-          <div className="mt-6 text-center text-gray-600">
-            <p>Your new recipe has been added successfully!</p>
+        {/* Add Recipe Form */}
+        {isAddingRecipe && (
+          <div className="mt-8 bg-white p-6 rounded-lg shadow-lg">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Add a New Recipe</h2>
+            <form onSubmit={handleAddRecipe}>
+              <div className="space-y-4">
+                <input type="text" placeholder="Recipe Title" value={newRecipe.title} onChange={(e) => setNewRecipe({ ...newRecipe, title: e.target.value })} className="w-full p-4 border border-gray-300 rounded-md" />
+                <textarea placeholder="Ingredients" value={newRecipe.ingredients} onChange={(e) => setNewRecipe({ ...newRecipe, ingredients: e.target.value })} className="w-full p-4 border border-gray-300 rounded-md" />
+                <textarea placeholder="Instructions" value={newRecipe.instructions} onChange={(e) => setNewRecipe({ ...newRecipe, instructions: e.target.value })} className="w-full p-4 border border-gray-300 rounded-md" />
+                <input type="file" onChange={(e) => handleFileChange(e)} className="w-full p-4 border border-gray-300 rounded-md" />
+              </div>
+              <button type="submit" disabled={isSubmitting} className="mt-4 w-full bg-purple-500 text-white py-2 rounded-md">
+                {isSubmitting ? 'Submitting...' : 'Submit Recipe'}
+              </button>
+            </form>
           </div>
         )}
       </div>
