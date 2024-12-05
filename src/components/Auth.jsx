@@ -8,26 +8,27 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [isLogin, setIsLogin] = useState(true);
-
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = isLogin ? '/login' : '/register';
-    const data = isLogin
-      ? { username, password }
-      : { username, email, password, name };
+    const data = isLogin ? { username, password } : { username, email, password, name };
 
     try {
-      const response = await axiosInstance.post(url, data);
+      const response = await axiosInstance.post(url, data, {
+        withCredentials: true, // Ensure the cookie is sent
+      });
+
       alert(response.data.message);
+
       if (isLogin) {
-        // Save token from response
-        localStorage.setItem('token', response.data.token); // Assuming the token is returned in response.data.token
+        // Save token and redirect to the profile page after successful login
+        localStorage.setItem('token', response.data.token);
         navigate('/profile');
-      }
-      else {
-        setIsLogin(true); // Switch to login after successful registration
+      } else {
+        // Switch to login view after successful registration
+        setIsLogin(true);
       }
     } catch (err) {
       alert(err.response?.data?.error || 'Something went wrong');
@@ -36,7 +37,6 @@ const Auth = () => {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-300 via-pink-300 to-red-300 overflow-hidden">
-      {/* Animated background */}
       <div className="absolute inset-0 z-0">
         <div className="w-96 h-96 bg-white opacity-10 rounded-full blur-xl animate-pulse absolute -top-10 -left-10"></div>
         <div className="w-72 h-72 bg-white opacity-20 rounded-full blur-2xl animate-spin-slow absolute bottom-10 right-10"></div>
@@ -47,7 +47,6 @@ const Auth = () => {
           {isLogin ? 'Welcome Back!' : 'Create an Account'}
         </h2>
         <form onSubmit={handleSubmit}>
-          {/* Name field for Register */}
           {!isLogin && (
             <div className="mb-4">
               <label htmlFor="name" className="block text-gray-600 font-medium mb-2">
@@ -64,7 +63,6 @@ const Auth = () => {
             </div>
           )}
 
-          {/* Username field */}
           <div className="mb-4">
             <label htmlFor="username" className="block text-gray-600 font-medium mb-2">
               Username
@@ -79,7 +77,6 @@ const Auth = () => {
             />
           </div>
 
-          {/* Email field for Register */}
           {!isLogin && (
             <div className="mb-4">
               <label htmlFor="email" className="block text-gray-600 font-medium mb-2">
@@ -96,7 +93,6 @@ const Auth = () => {
             </div>
           )}
 
-          {/* Password field */}
           <div className="mb-6">
             <label htmlFor="password" className="block text-gray-600 font-medium mb-2">
               Password
